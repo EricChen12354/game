@@ -4,6 +4,7 @@ import json
 
 pygame.init()
 
+
 # ---------- GAME MODES ----------------
 # Game mode 1: Classic
 #   Classic space invaders, one life, enemies have health, enemies cannot shoot lasers, only shoot one laser at
@@ -11,6 +12,20 @@ pygame.init()
 #     - Easy:
 #     - Medium:
 #     - Hard:
+#   Tutorial:
+#       This is your space ship, use "A" and "D"
+#       to strafe left and right. Press "SPACE" or
+#       left click your mouse to fire a laser. You
+#       have a certain number of lives depending on
+#       the difficulty.
+#
+#       This is an enemy. They come in waves and
+#       move left and right as a group. They cannot
+#       shoot you back. They take a certain amount
+#       of shots to kill, depending on the difficulty.
+#
+#       To win, you must clear the airspace of enemies
+#       and complete all the waves. Good luck!.
 
 # Game mode 2: Heist
 #   Safe with certain amount of health at the top of the screen, win by destroying the safe within a certain amount
@@ -62,6 +77,73 @@ def fade_in():
         pygame.display.update()
 
 
+def difficulty_selection(mode):
+    # Title
+    font = pygame.font.SysFont('Monospace', 50)
+    title_text = font.render(f'{mode.title()} Mode', True, WHITE)
+    title_text_rect = title_text.get_rect(center=(WIDTH / 2, 50))
+    screen.blit(title_text, title_text_rect)
+
+    # Easy
+    pygame.draw.rect(screen, GREEN, [50, 100, 400, 100], 5)
+
+    font = pygame.font.SysFont('Monospace', 30)
+    easy_text = font.render('Easy', True, GREEN)
+    easy_text_rect = easy_text.get_rect(center=(WIDTH / 2, 130))
+    screen.blit(easy_text, easy_text_rect)
+
+    font = pygame.font.SysFont('Monospace', 20)
+    mode_easy_high_score = usernames[username][mode][0]
+    easy_high_score = font.render(f'High score: {mode_easy_high_score}', True, GREEN)
+    easy_high_score_rect = easy_high_score.get_rect(center=(WIDTH / 2, 165))
+    screen.blit(easy_high_score, easy_high_score_rect)
+
+    # Medium
+    pygame.draw.rect(screen, YELLOW, [50, 210, 400, 100], 5)
+
+    font = pygame.font.SysFont('Monospace', 30)
+    medium_text = font.render('Medium', True, YELLOW)
+    medium_text_rect = medium_text.get_rect(center=(WIDTH / 2, 240))
+    screen.blit(medium_text, medium_text_rect)
+
+    font = pygame.font.SysFont('Monospace', 20)
+    mode_medium_high_score = usernames[username][mode][1]
+    medium_high_score = font.render(f'High score: {mode_medium_high_score}', True, YELLOW)
+    medium_high_score_rect = medium_high_score.get_rect(center=(WIDTH / 2, 275))
+    screen.blit(medium_high_score, medium_high_score_rect)
+
+    # Hard
+    pygame.draw.rect(screen, RED, [50, 320, 400, 100], 5)
+
+    font = pygame.font.SysFont('Monospace', 30)
+    hard_text = font.render('Hard', True, RED)
+    hard_text_rect = hard_text.get_rect(center=(WIDTH / 2, 350))
+    screen.blit(hard_text, hard_text_rect)
+
+    font = pygame.font.SysFont('Monospace', 20)
+    mode_hard_high_score = usernames[username][mode][2]
+    hard_high_score = font.render(f'High score: {mode_hard_high_score}', True, RED)
+    hard_high_score_rect = hard_high_score.get_rect(center=(WIDTH / 2, 385))
+    screen.blit(hard_high_score, hard_high_score_rect)
+
+    # Back
+    pygame.draw.rect(screen, WHITE, [50, 450, 185, 100], 5)
+
+    font = pygame.font.SysFont('Monospace', 30)
+    back_text = font.render('BACK', True, WHITE)
+    back_text_rect = back_text.get_rect(center=(142, 500))
+    screen.blit(back_text, back_text_rect)
+
+    # Tutorial
+    pygame.draw.rect(screen, WHITE, [265, 450, 185, 100], 5)
+
+    tutorial_text = font.render('TUTORIAL', True, WHITE)
+    tutorial_text_rect = tutorial_text.get_rect(center=(357, 500))
+    screen.blit(tutorial_text, tutorial_text_rect)
+
+    pygame.display.update()
+
+
 # ---------- SCREEN VARIABLES ----------
 WIDTH = 500
 HEIGHT = 600
@@ -85,13 +167,29 @@ font = pygame.font.SysFont('Monospace', FONT_SIZE)
 
 # ---------- GAME STATE ----------------
 game_over = False
-loading_screen = True
+loading_screen = False
 log_in = False
 profile_screen = False
 main_menu = False
+
 classic_difficulty_selection = False
 heist_difficulty_selection = False
 escort_difficulty_selection = False
+
+classic_easy = True
+classic_medium = False
+classic_hard = False
+classic_tutorial = False
+
+heist_easy = False
+heist_medium = False
+heist_hard = False
+heist_tutorial = False
+
+escort_easy = False
+escort_medium = False
+escort_hard = False
+escort_tutorial = False
 
 # ---------- BACKGROUND ASTEROIDS ------
 asteroids_size = 30
@@ -126,6 +224,39 @@ RECT_HEIGHT = 100
 BACK_WIDTH = 300
 BACK_HEIGHT = 50
 
+# ---------- GAME MODE TUTORIALS -------
+classic_description = ['This is your space ship,',
+                       'use "A" and "D" to strafe',
+                       'left and right. Press "SPACE"',
+                       'to fire a laser.',
+                       '',
+                       'This is an enemy. They come',
+                       'in waves and move left and right ',
+                       'as a group. They cannot shoot.',
+                       'They take a certain amount of ',
+                       'shots to kill, depending on the ',
+                       'difficulty.',
+                       '',
+                       'To win, you must clear the ',
+                       'airspace of enemies and complete ',
+                       'all the waves. Don\'t run out of ',
+                       'lives! Good luck!.',
+                       ]
+
+# ---------- CLASSIC EASY --------------
+start = False
+ship_x = WIDTH / 2 - 32
+ship_y = 500
+enemy_pos = [[10, -38], [68, -38], [126, -38], [184, -38], [242, -38], [300, -38],
+             [10, 10], [68, 10], [126, 10], [184, 10], [242, 10], [300, 10],
+             [10, 58], [68, 58], [126, 58], [184, 58], [242, 58], [300, 58],
+             [10, 106], [68, 106], [126, 106], [184, 106], [242, 106], [300, 106],
+             [10, 154], [68, 154], [126, 154], [184, 154], [242, 154], [300, 154]
+             ]
+enemy_speed = 2
+laser_pos = []
+laser_off_screen = False
+
 # ---------- MAIN GAME LOOP-------------
 while not game_over:
 
@@ -143,6 +274,81 @@ while not game_over:
                 loading_screen = False
                 log_in = True
 
+            elif classic_easy is True:
+                if start is False:
+                    start = True
+
+            elif classic_tutorial is True:
+                fade_out()
+                classic_tutorial = False
+                classic_difficulty_selection = True
+
+            elif classic_difficulty_selection is True:
+                if 50 <= mouse_x <= 450 and 100 <= mouse_y <= 200:
+                    fade_out()
+                    classic_difficulty_selection = False
+                    classic_easy = True
+                elif 50 <= mouse_x <= 450 and 210 <= mouse_y <= 310:
+                    fade_out()
+                    classic_difficulty_selection = False
+                    classic_medium = True
+                elif 50 <= mouse_x <= 450 and 320 <= mouse_y <= 420:
+                    fade_out()
+                    classic_difficulty_selection = False
+                    classic_hard = True
+                elif 50 <= mouse_x <= 235 and 450 <= mouse_y <= 550:
+                    fade_out()
+                    classic_difficulty_selection = False
+                    main_menu = True
+                elif 265 <= mouse_x <= 450 <= mouse_y <= 550:
+                    fade_out()
+                    classic_difficulty_selection = False
+                    classic_tutorial = True
+
+            elif heist_difficulty_selection is True:
+                if 50 <= mouse_x <= 450 and 100 <= mouse_y <= 200:
+                    fade_out()
+                    heist_difficulty_selection = False
+                    heist_easy = True
+                elif 50 <= mouse_x <= 450 and 210 <= mouse_y <= 310:
+                    fade_out()
+                    heist_difficulty_selection = False
+                    heist_medium = True
+                elif 50 <= mouse_x <= 450 and 320 <= mouse_y <= 420:
+                    fade_out()
+                    heist_difficulty_selection = False
+                    heist_hard = True
+                elif 50 <= mouse_x <= 235 and 450 <= mouse_y <= 550:
+                    fade_out()
+                    heist_difficulty_selection = False
+                    main_menu = True
+                elif 265 <= mouse_x <= 450 <= mouse_y <= 550:
+                    fade_out()
+                    heist_difficulty_selection = False
+                    classic_tutorial = True
+
+            elif escort_difficulty_selection is True:
+                if 50 <= mouse_x <= 450 and 100 <= mouse_y <= 200:
+                    fade_out()
+                    escort_difficulty_selection = False
+                    escort_easy = True
+                elif 50 <= mouse_x <= 450 and 210 <= mouse_y <= 310:
+                    fade_out()
+                    escort_difficulty_selection = False
+                    escort_medium = True
+                elif 50 <= mouse_x <= 450 and 320 <= mouse_y <= 420:
+                    fade_out()
+                    escort_difficulty_selection = False
+                    escort_hard = True
+                elif 50 <= mouse_x <= 235 and 450 <= mouse_y <= 550:
+                    fade_out()
+                    escort_difficulty_selection = False
+                    main_menu = True
+                elif 265 <= mouse_x <= 450 <= mouse_y <= 550:
+                    fade_out()
+                    escort_difficulty_selection = False
+                    escort_tutorial = True
+
             elif log_in is True:
                 # Clear button
                 if 50 <= mouse_x <= 225 and 400 <= mouse_y <= 450:
@@ -153,6 +359,18 @@ while not game_over:
                     fade_out()
                     log_in = False
                     profile_screen = True
+
+                    if username in usernames:
+                        message = f'Welcome back {username}!'
+                    else:
+                        message = f'Welcome {username}!'
+
+                        # Create and add profile to json file
+                        usernames[username] = {"classic": [" - ", " - ", " - "], "heist": [" - ", " - ", " - "],
+                                               "escort": [" - ", " - ", " - "]}
+
+                        with open('usernames.json', 'w') as f:
+                            json.dump(usernames, f, indent=4)
 
             elif main_menu is True:
                 # Back button
@@ -271,6 +489,34 @@ while not game_over:
                     log_in = False
                     profile_screen = True
 
+                    if username in usernames:
+                        message = f'Welcome back {username}!'
+                    else:
+                        message = f'Welcome {username}!'
+
+                        # Create and add profile to json file
+                        usernames[username] = {"classic": [" - ", " - ", " - "], "heist": [" - ", " - ", " - "],
+                                               "escort": [" - ", " - ", " - "]}
+
+                        with open('usernames.json', 'w') as f:
+                            json.dump(usernames, f, indent=4)
+
+            elif classic_easy is True and start is True:
+                if event.key == pygame.K_SPACE:
+                    if len(laser_pos) != 0 and laser_pos[-1][1] >= ship_y - 80:
+                        pass
+                    else:
+                        laser_pos.append([ship_x + 27, ship_y])
+
+            elif classic_easy is True:
+                if start is False:
+                    start = True
+
+            elif classic_tutorial is True:
+                fade_out()
+                classic_tutorial = False
+                classic_difficulty_selection = True
+
             elif loading_screen is True:
                 fade_out()
                 loading_screen = False
@@ -357,18 +603,6 @@ while not game_over:
     elif profile_screen is True:
 
         # Display player name
-        # ERROR: DISPLAYS "WELCOME" AND THEN "WELCOME BACK"!!!!!
-        if username in usernames:
-            message = f'Welcome back {username}!'
-        else:
-            message = f'Welcome {username}!'
-
-            # Create and add profile to json file
-            usernames[username] = {"classic": [" - ", " - ", " - "], "heist": [" - ", " - ", " - "], "escort": [" - ", " - ", " - "]}
-
-            with open('usernames.json', 'w') as f:
-                json.dump(usernames, f, indent=4)
-
         font = pygame.font.SysFont('Monospace', 30)
         welcome_text = font.render(message, True, WHITE)
         welcome_text_rect = welcome_text.get_rect(center=(WIDTH / 2, 50))
@@ -506,35 +740,124 @@ while not game_over:
 
     # CLASSIC MODE DIFFICULTY SELECTION
     elif classic_difficulty_selection is True:
-        # Title
-        font = pygame.font.SysFont('Monospace', 50)
-        classic_text = font.render('Classic Mode', True, WHITE)
-        classic_text_rect = classic_text.get_rect(center=(WIDTH / 2, 50))
-        screen.blit(classic_text, classic_text_rect)
+        difficulty_selection("classic")
 
-        # Easy
-        pygame.draw.rect(screen, GREEN, [50, 100, 400, 100], 3)
-
-        # Medium
-        pygame.draw.rect(screen, YELLOW, [50, 210, 400, 100], 3)
-
-        # Hard
-        pygame.draw.rect(screen, RED, [50, 320, 400, 100], 3)
-
-        # Back
-        pygame.draw.rect(screen, WHITE, [50, 430, 185, 100], 3)
-
+    # CLASSIC MODE TUTORIAL
+    elif classic_tutorial is True:
         # Tutorial
-        pygame.draw.rect(screen, WHITE, [265, 430, 185, 100], 3)
+        font = pygame.font.SysFont('Monospace', 50)
+        tutorial_text = font.render('Tutorial', True, WHITE)
+        tutorial_text_rect = tutorial_text.get_rect(center=(WIDTH / 2, 60))
+        screen.blit(tutorial_text, tutorial_text_rect)
+
+        # Display description
+        for i in range(len(classic_description)):
+            font = pygame.font.SysFont('Monospace', 17)
+            description_text = font.render(classic_description[i], True, WHITE)
+            description_text_rect = description_text.get_rect(center=(200, 150 + 20 * i))
+            screen.blit(description_text, description_text_rect)
+
+        # Draw space ship icon
+        ship = pygame.image.load('ship.png')
+        ship = pygame.transform.rotate(ship, 180)
+        screen.blit(ship, (390, 160))
+
+        # Draw enemy ship icon
+        enemy = pygame.image.load('enemy.png')
+        screen.blit(enemy, (400, 300))
+
+        # Draw star
+        star = pygame.image.load('star.png')
+        screen.blit(star, (400, 415))
+
+        # Back (fade in and out)
+        font = pygame.font.SysFont('Monospace', 20)
+        instructions_text = font.render('Press any key to continue.', True, WHITE)
+        instructions_text_rect = instructions_text.get_rect(center=(WIDTH / 2, 550))
+        screen.blit(instructions_text, instructions_text_rect)
+
+        if alpha >= 255 or alpha <= 0:
+            change *= -1
+        alpha += change
+        fade.set_alpha(alpha)
+        screen.blit(fade, ((WIDTH - FADE_WIDTH) / 2, 540))
+
+        pygame.display.update()
+
+    # CLASSIC MODE EASY
+    elif classic_easy is True:
+        screen.fill(BACKGROUND_COLOUR)
+
+        # Start
+        if start is False:
+            # Next step instructions (fade in and out)
+            font = pygame.font.SysFont('Monospace', 20)
+            instructions_text = font.render('Press any key to continue.', True, WHITE)
+            instructions_text_rect = instructions_text.get_rect(center=(WIDTH / 2, HEIGHT / 2))
+            screen.blit(instructions_text, instructions_text_rect)
+
+            if alpha >= 255 or alpha <= 0:
+                change *= -1
+            alpha += change
+            fade.set_alpha(alpha)
+            screen.blit(fade, ((WIDTH - FADE_WIDTH) / 2, (HEIGHT - FADE_HEIGHT) / 2))
+        else:
+            # Ship movement
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+                if ship_x >= 0:
+                    ship_x -= 5
+            elif keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+                if ship_x <= WIDTH - 64:
+                    ship_x += 5
+
+            # Enemy movement
+            if enemy_pos[-1][0] + 48 + enemy_speed > WIDTH or enemy_pos[0][0] + enemy_speed < 0:
+                enemy_speed *= -1
+                for i in range(len(enemy_pos)):
+                    enemy_pos[i][1] += 48
+
+            for i in range(len(enemy_pos)):
+                enemy_pos[i][0] += enemy_speed
+
+            # Laser movement
+            laser = pygame.image.load('laser.png')
+            for i in range(len(laser_pos)):
+                if laser_pos[i][1] <= -20:
+                    laser_off_screen = True
+                else:
+                    laser_pos[i][1] -= 7
+                    screen.blit(laser, (laser_pos[i][0], laser_pos[i][1]))
+            if laser_off_screen:
+                laser_pos.pop(0)
+                laser_off_screen = False
+
+        # Draw enemies
+        for pos in enemy_pos:
+            enemy = pygame.image.load('enemy.png')
+            screen.blit(enemy, (pos[0], pos[1]))
+
+        # Draw space ship icon
+        ship = pygame.image.load('ship.png')
+        ship = pygame.transform.rotate(ship, 180)
+        screen.blit(ship, (ship_x, ship_y))
 
         pygame.display.update()
 
     # HEIST MODE DIFFICULTY SELECTION
     elif heist_difficulty_selection is True:
+        difficulty_selection("heist")
+
+    # HEIST MODE TUTORIAL
+    elif heist_tutorial is True:
         pass
 
     # ESCORT MODE DIFFICULTY SELECTION
     elif escort_difficulty_selection is True:
+        difficulty_selection("escort")
+
+    # ESCORT MODE TUTORIAL
+    elif escort_tutorial is True:
         pass
 
     clock.tick(30)
