@@ -191,7 +191,7 @@ font = pygame.font.SysFont('Monospace', FONT_SIZE)
 
 # ---------- GAME STATE ----------------
 finished = False
-loading_screen = False
+loading_screen = True
 log_in = False
 profile_screen = False
 main_menu = False
@@ -200,7 +200,7 @@ classic_difficulty_selection = False
 heist_difficulty_selection = False
 escort_difficulty_selection = False
 
-classic_easy = True
+classic_easy = False
 classic_medium = False
 classic_hard = False
 classic_tutorial = False
@@ -271,19 +271,42 @@ classic_description = ['This is your space ship,',
 start = False
 ship_x = WIDTH / 2 - 32
 ship_y = 500
-enemy_pos = [[10, -38], [10, 10], [10, 58], [10, 106], [10, 154],
+enemy_pos_easy = [[10, -38], [10, 10], [10, 58], [10, 106], [10, 154],
              [68, -38], [68, 10], [68, 58], [68, 106], [68, 154],
              [126, -38], [126, 10], [126, 58], [126, 106], [126, 154],
              [184, -38], [184, 10], [184, 58], [184, 106], [184, 154],
              [242, -38], [242, 10], [242, 58], [242, 106], [242, 154],
              [300, -38], [300, 10], [300, 58], [300, 106], [300, 154]
              ]
-enemy_speed = 2
+enemy_speed_easy = 2
 laser_pos = []
 laser_off_screen = False
 laser_del = []
 enemy_del = []
 classic_easy_score = 0
+
+# ---------- CLASSIC MEDIUM ------------
+enemy_pos_medium = [[10, -86], [10, -38], [10, 10], [10, 58], [10, 106], [10, 154],
+             [68, -86], [68, -38], [68, 10], [68, 58], [68, 106], [68, 154],
+             [126, -86], [126, -38], [126, 10], [126, 58], [126, 106], [126, 154],
+             [184, -86], [184, -38], [184, 10], [184, 58], [184, 106], [184, 154],
+             [242, -86], [242, -38], [242, 10], [242, 58], [242, 106], [242, 154],
+             [300, -86], [300, -38], [300, 10], [300, 58], [300, 106], [300, 154],
+             [358, -86], [358, -38], [358, 10], [358, 58], [358, 106], [358, 154]
+             ]
+enemy_speed_medium = 3
+classic_medium_score = 0
+
+# ---------- CLASSIC HARD --------------
+enemy_pos_hard = [[10, 10], [10, 58], [10, 106],
+             [68, 10], [68, 58], [68, 106],
+             [126, 10], [126, 58], [126, 106],
+             [184, 10], [184, 58], [184, 106],
+             [242, 10], [242, 58], [242, 106],
+             [300, 10], [300, 58], [300, 106],
+             ]
+enemy_speed_hard = 5
+classic_hard_score = 0
 
 # ---------- MAIN GAME LOOP-------------
 while not finished:
@@ -302,6 +325,14 @@ while not finished:
                 log_in = True
 
             elif classic_easy is True:
+                if start is False:
+                    start = True
+
+            elif classic_medium is True:
+                if start is False:
+                    start = True
+
+            elif classic_hard is True:
                 if start is False:
                     start = True
 
@@ -393,8 +424,8 @@ while not finished:
                         message = f'Welcome {username}!'
 
                         # Create and add profile to json file
-                        usernames[username] = {"classic": [" - ", " - ", " - "], "heist": [" - ", " - ", " - "],
-                                               "escort": [" - ", " - ", " - "]}
+                        usernames[username] = {"classic": [0, 0, 0], "heist": [0, 0, 0],
+                                               "escort": [0, 0, 0]}
 
                         with open('usernames.json', 'w') as f:
                             json.dump(usernames, f, indent=4)
@@ -528,15 +559,20 @@ while not finished:
                         with open('usernames.json', 'w') as f:
                             json.dump(usernames, f, indent=4)
 
-            elif classic_easy is True and start is True:
+            elif classic_easy is True and start is True or classic_medium is True and start is True or classic_hard is True and start is True:
                 if event.key == pygame.K_SPACE:
-                    if len(laser_pos) != 0 and laser_pos[-1][1] >= ship_y - 80:
+                    if len(laser_pos) != 0 and laser_pos[-1][1] >= ship_y - 30:
                         pass
                     else:
                         laser_pos.append([ship_x + 27, ship_y])
-                        classic_easy_score -= 10
+                        if classic_medium is True:
+                            classic_medium_score = int(classic_medium_score)
+                            classic_medium_score -= 10
+                        elif classic_hard is True:
+                            classic_hard_score = int(classic_hard_score)
+                            classic_hard_score -= 50
 
-            elif classic_easy is True:
+            elif classic_easy is True or classic_medium is True or classic_hard is True:
                 if start is False:
                     start = True
 
@@ -841,17 +877,17 @@ while not finished:
                     ship_x += 5
 
             # Enemy movement
-            if enemy_pos[-1][0] + 48 + enemy_speed > WIDTH or enemy_pos[0][0] + enemy_speed < 0:
-                enemy_speed *= -1
-                for i in range(len(enemy_pos)):
-                    enemy_pos[i][1] += 48
+            if enemy_pos_easy[-1][0] + 48 + enemy_speed_easy > WIDTH or enemy_pos_easy[0][0] + enemy_speed_easy < 0:
+                enemy_speed_easy *= -1
+                for i in range(len(enemy_pos_easy)):
+                    enemy_pos_easy[i][1] += 48
                     # If enemies reach past your ship, you lose
-                    if enemy_pos[i][1] >= ship_y:
+                    if enemy_pos_easy[i][1] >= ship_y:
                         game_over()
                         classic_easy = False
                         classic_difficulty_selection = True
                         start = False
-                        enemy_pos = [[10, -38], [68, -38], [126, -38], [184, -38], [242, -38], [300, -38],
+                        enemy_pos_easy = [[10, -38], [68, -38], [126, -38], [184, -38], [242, -38], [300, -38],
                                      [10, 10], [68, 10], [126, 10], [184, 10], [242, 10], [300, 10],
                                      [10, 58], [68, 58], [126, 58], [184, 58], [242, 58], [300, 58],
                                      [10, 106], [68, 106], [126, 106], [184, 106], [242, 106], [300, 106],
@@ -873,8 +909,8 @@ while not finished:
                         screen.fill(BACKGROUND_COLOUR)
                         # process score
 
-            for i in range(len(enemy_pos)):
-                enemy_pos[i][0] += enemy_speed
+            for i in range(len(enemy_pos_easy)):
+                enemy_pos_easy[i][0] += enemy_speed_easy
 
             # Laser movement
             laser = pygame.image.load('laser.png')
@@ -886,11 +922,12 @@ while not finished:
                     screen.blit(laser, (laser_pos[i][0], laser_pos[i][1]))
 
                     # Laser collision with enemy
-                    for j in range(len(enemy_pos)):
-                        if enemy_pos[j][0] <= laser_pos[i][0] <= enemy_pos[j][0] + 48:
-                            if enemy_pos[j][1] <= laser_pos[i][1] <= enemy_pos[j][1] + 48:
+                    for j in range(len(enemy_pos_easy)):
+                        if enemy_pos_easy[j][0] <= laser_pos[i][0] <= enemy_pos_easy[j][0] + 48:
+                            if enemy_pos_easy[j][1] <= laser_pos[i][1] <= enemy_pos_easy[j][1] + 48:
                                 enemy_del.append(j)
                                 laser_del.append(i)
+                                classic_easy_score = int(classic_easy_score)
                                 classic_easy_score += 100
 
             if laser_off_screen:
@@ -898,19 +935,19 @@ while not finished:
                 laser_off_screen = False
 
             if len(enemy_del) != 0:
-                enemy_pos.pop(enemy_del[0])
+                enemy_pos_easy.pop(enemy_del[0])
                 enemy_del.clear()
             if len(laser_del) != 0:
                 laser_pos.pop(laser_del[0])
                 laser_del.clear()
 
             # If all enemies are dead
-            if len(enemy_pos) == 0:
+            if len(enemy_pos_easy) == 0:
                 win()
                 classic_easy = False
                 classic_difficulty_selection = True
                 start = False
-                enemy_pos = [[10, -38], [68, -38], [126, -38], [184, -38], [242, -38], [300, -38],
+                enemy_pos_easy = [[10, -38], [68, -38], [126, -38], [184, -38], [242, -38], [300, -38],
                              [10, 10], [68, 10], [126, 10], [184, 10], [242, 10], [300, 10],
                              [10, 58], [68, 58], [126, 58], [184, 58], [242, 58], [300, 58],
                              [10, 106], [68, 106], [126, 106], [184, 106], [242, 106], [300, 106],
@@ -932,7 +969,7 @@ while not finished:
                 screen.fill(BACKGROUND_COLOUR)
 
         # Draw enemies
-        for pos in enemy_pos:
+        for pos in enemy_pos_easy:
             enemy = pygame.image.load('enemy.png')
             screen.blit(enemy, (pos[0], pos[1]))
 
@@ -944,6 +981,287 @@ while not finished:
         # Draw score
         font = pygame.font.SysFont('Monospace', 30)
         score_text = font.render(str(classic_easy_score), True, RED)
+        score_text_rect = score_text.get_rect(center=(WIDTH / 2, 50))
+        screen.blit(score_text, score_text_rect)
+
+        pygame.display.update()
+
+    # CLASSIC MODE MEDIUM
+    elif classic_medium is True:
+        screen.fill(BACKGROUND_COLOUR)
+
+        # Start
+        if start is False:
+            classic_medium_score = 0
+            # Next step instructions (fade in and out)
+            font = pygame.font.SysFont('Monospace', 20)
+            instructions_text = font.render('Press any key to continue.', True, WHITE)
+            instructions_text_rect = instructions_text.get_rect(center=(WIDTH / 2, HEIGHT / 2))
+            screen.blit(instructions_text, instructions_text_rect)
+
+            if alpha >= 255 or alpha <= 0:
+                change *= -1
+            alpha += change
+            fade.set_alpha(alpha)
+            screen.blit(fade, ((WIDTH - FADE_WIDTH) / 2, (HEIGHT - FADE_HEIGHT) / 2))
+        else:
+            # Ship movement
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+                if ship_x >= 0:
+                    ship_x -= 7
+            elif keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+                if ship_x <= WIDTH - 64:
+                    ship_x += 7
+
+            # Enemy movement
+            if enemy_pos_medium[-1][0] + 48 + enemy_speed_medium > WIDTH or enemy_pos_medium[0][0] + enemy_speed_medium < 0:
+                enemy_speed_medium *= -1
+                for i in range(len(enemy_pos_medium)):
+                    enemy_pos_medium[i][1] += 48
+                    # If enemies reach past your ship, you lose
+                    if enemy_pos_medium[i][1] >= ship_y:
+                        game_over()
+                        classic_medium = False
+                        classic_difficulty_selection = True
+                        start = False
+                        enemy_pos_medium = [[10, -86], [10, -38], [10, 10], [10, 58], [10, 106], [10, 154],
+                                            [68, -86], [68, -38], [68, 10], [68, 58], [68, 106], [68, 154],
+                                            [126, -86], [126, -38], [126, 10], [126, 58], [126, 106], [126, 154],
+                                            [184, -86], [184, -38], [184, 10], [184, 58], [184, 106], [184, 154],
+                                            [242, -86], [242, -38], [242, 10], [242, 58], [242, 106], [242, 154],
+                                            [300, -86], [300, -38], [300, 10], [300, 58], [300, 106], [300, 154],
+                                            [358, -86], [358, -38], [358, 10], [358, 58], [358, 106], [358, 154]
+                                            ]
+                        ship_x = WIDTH / 2 - 32
+                        ship_y = 500
+                        laser_pos = []
+                        laser_off_screen = False
+
+                        if classic_medium_score > usernames[username]["classic"][1]:
+                            usernames[username]["classic"][1] = classic_medium_score
+
+                            with open('usernames.json', 'w') as f:
+                                json.dump(usernames, f)
+
+                        classic_medium_score = 0
+
+                        screen.fill(BACKGROUND_COLOUR)
+                        # process score
+
+            for i in range(len(enemy_pos_medium)):
+                enemy_pos_medium[i][0] += enemy_speed_medium
+
+            # Laser movement
+            laser = pygame.image.load('laser.png')
+            for i in range(len(laser_pos)):
+                if laser_pos[i][1] <= -20:
+                    laser_off_screen = True
+                else:
+                    laser_pos[i][1] -= 7
+                    screen.blit(laser, (laser_pos[i][0], laser_pos[i][1]))
+
+                    # Laser collision with enemy
+                    for j in range(len(enemy_pos_medium)):
+                        if enemy_pos_medium[j][0] <= laser_pos[i][0] <= enemy_pos_medium[j][0] + 48:
+                            if enemy_pos_medium[j][1] <= laser_pos[i][1] <= enemy_pos_medium[j][1] + 48:
+                                enemy_del.append(j)
+                                laser_del.append(i)
+                                classic_medium_score += 100
+
+            if laser_off_screen:
+                laser_pos.pop(0)
+                laser_off_screen = False
+
+            if len(enemy_del) != 0:
+                enemy_pos_medium.pop(enemy_del[0])
+                enemy_del.clear()
+            if len(laser_del) != 0:
+                laser_pos.pop(laser_del[0])
+                laser_del.clear()
+
+            # If all enemies are dead
+            if len(enemy_pos_medium) == 0:
+                win()
+                classic_medium = False
+                classic_difficulty_selection = True
+                start = False
+                enemy_pos_medium = [[10, -86], [10, -38], [10, 10], [10, 58], [10, 106], [10, 154],
+                                    [68, -86], [68, -38], [68, 10], [68, 58], [68, 106], [68, 154],
+                                    [126, -86], [126, -38], [126, 10], [126, 58], [126, 106], [126, 154],
+                                    [184, -86], [184, -38], [184, 10], [184, 58], [184, 106], [184, 154],
+                                    [242, -86], [242, -38], [242, 10], [242, 58], [242, 106], [242, 154],
+                                    [300, -86], [300, -38], [300, 10], [300, 58], [300, 106], [300, 154],
+                                    [358, -86], [358, -38], [358, 10], [358, 58], [358, 106], [358, 154]
+                                    ]
+                ship_x = WIDTH / 2 - 32
+                ship_y = 500
+                laser_pos = []
+                laser_off_screen = False
+
+                if classic_medium_score > usernames[username]["classic"][1]:
+                    usernames[username]["classic"][1] = classic_medium_score
+
+                    with open('usernames.json', 'w') as f:
+                        json.dump(usernames, f)
+
+                classic_medium_score = 0
+
+                screen.fill(BACKGROUND_COLOUR)
+
+        # Draw enemies
+        for pos in enemy_pos_medium:
+            enemy = pygame.image.load('enemy.png')
+            screen.blit(enemy, (pos[0], pos[1]))
+
+        # Draw space ship icon
+        ship = pygame.image.load('ship.png')
+        ship = pygame.transform.rotate(ship, 180)
+        screen.blit(ship, (ship_x, ship_y))
+
+        # Draw score
+        font = pygame.font.SysFont('Monospace', 30)
+        score_text = font.render(str(classic_medium_score), True, RED)
+        score_text_rect = score_text.get_rect(center=(WIDTH / 2, 50))
+        screen.blit(score_text, score_text_rect)
+
+        pygame.display.update()
+
+    # CLASSIC MODE HARD
+    elif classic_hard is True:
+        screen.fill(BACKGROUND_COLOUR)
+
+        # Start
+        if start is False:
+            classic_hard_score = 0
+            # Next step instructions (fade in and out)
+            font = pygame.font.SysFont('Monospace', 20)
+            instructions_text = font.render('Press any key to continue.', True, WHITE)
+            instructions_text_rect = instructions_text.get_rect(center=(WIDTH / 2, HEIGHT / 2))
+            screen.blit(instructions_text, instructions_text_rect)
+
+            if alpha >= 255 or alpha <= 0:
+                change *= -1
+            alpha += change
+            fade.set_alpha(alpha)
+            screen.blit(fade, ((WIDTH - FADE_WIDTH) / 2, (HEIGHT - FADE_HEIGHT) / 2))
+        else:
+            # Ship movement
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+                if ship_x >= 0:
+                    ship_x -= 7
+            elif keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+                if ship_x <= WIDTH - 64:
+                    ship_x += 7
+
+            # Enemy movement
+            if enemy_pos_hard[-1][0] + 48 + enemy_speed_hard > WIDTH or enemy_pos_hard[0][0] + enemy_speed_hard < 0:
+                enemy_speed_hard *= -1
+                for i in range(len(enemy_pos_hard)):
+                    enemy_pos_hard[i][1] += 48
+                    # If enemies reach past your ship, you lose
+                    if enemy_pos_hard[i][1] >= ship_y:
+                        game_over()
+                        classic_hard = False
+                        classic_difficulty_selection = True
+                        start = False
+                        enemy_pos_hard = [[10, 10], [10, 58], [10, 106],
+                                          [68, 10], [68, 58], [68, 106],
+                                          [126, 10], [126, 58], [126, 106],
+                                          [184, 10], [184, 58], [184, 106],
+                                          [242, 10], [242, 58], [242, 106],
+                                          [300, 10], [300, 58], [300, 106],
+                                          [358, 10], [358, 58], [358, 106]
+                                          ]
+                        ship_x = WIDTH / 2 - 32
+                        ship_y = 500
+                        laser_pos = []
+                        laser_off_screen = False
+
+                        if classic_hard_score > usernames[username]["classic"][2]:
+                            usernames[username]["classic"][2] = classic_hard_score
+
+                            with open('usernames.json', 'w') as f:
+                                json.dump(usernames, f)
+
+                        classic_hard_score = 0
+
+                        screen.fill(BACKGROUND_COLOUR)
+
+            for i in range(len(enemy_pos_hard)):
+                enemy_pos_hard[i][0] += enemy_speed_hard
+
+            # Laser movement
+            laser = pygame.image.load('laser.png')
+            for i in range(len(laser_pos)):
+                if laser_pos[i][1] <= -20:
+                    laser_off_screen = True
+                else:
+                    laser_pos[i][1] -= 7
+                    screen.blit(laser, (laser_pos[i][0], laser_pos[i][1]))
+
+                    # Laser collision with enemy
+                    for j in range(len(enemy_pos_hard)):
+                        if enemy_pos_hard[j][0] <= laser_pos[i][0] <= enemy_pos_hard[j][0] + 48:
+                            if enemy_pos_hard[j][1] <= laser_pos[i][1] <= enemy_pos_hard[j][1] + 48:
+                                enemy_del.append(j)
+                                laser_del.append(i)
+                                classic_hard_score += 100
+
+            if laser_off_screen:
+                laser_pos.pop(0)
+                laser_off_screen = False
+
+            if len(enemy_del) != 0:
+                enemy_pos_hard.pop(enemy_del[0])
+                enemy_del.clear()
+            if len(laser_del) != 0:
+                laser_pos.pop(laser_del[0])
+                laser_del.clear()
+
+            # If all enemies are dead
+            if len(enemy_pos_hard) == 0:
+                win()
+                classic_hard = False
+                classic_difficulty_selection = True
+                start = False
+                enemy_pos_hard = [[10, 10], [10, 58], [10, 106],
+                                  [68, 10], [68, 58], [68, 106],
+                                  [126, 10], [126, 58], [126, 106],
+                                  [184, 10], [184, 58], [184, 106],
+                                  [242, 10], [242, 58], [242, 106],
+                                  [300, 10], [300, 58], [300, 106],
+                                  [358, 10], [358, 58], [358, 106]
+                                  ]
+                ship_x = WIDTH / 2 - 32
+                ship_y = 500
+                laser_pos = []
+                laser_off_screen = False
+
+                if classic_hard_score > usernames[username]["classic"][2]:
+                    usernames[username]["classic"][2] = classic_hard_score
+
+                    with open('usernames.json', 'w') as f:
+                        json.dump(usernames, f)
+
+                classic_hard_score = 0
+
+                screen.fill(BACKGROUND_COLOUR)
+
+        # Draw enemies
+        for pos in enemy_pos_hard:
+            enemy = pygame.image.load('enemy.png')
+            screen.blit(enemy, (pos[0], pos[1]))
+
+        # Draw space ship icon
+        ship = pygame.image.load('ship.png')
+        ship = pygame.transform.rotate(ship, 180)
+        screen.blit(ship, (ship_x, ship_y))
+
+        # Draw score
+        font = pygame.font.SysFont('Monospace', 30)
+        score_text = font.render(str(classic_hard_score), True, RED)
         score_text_rect = score_text.get_rect(center=(WIDTH / 2, 50))
         screen.blit(score_text, score_text_rect)
 
