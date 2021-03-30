@@ -1,6 +1,7 @@
 import pygame
 import json
 import sys
+import random
 
 pygame.init()
 
@@ -30,6 +31,48 @@ def fade_out():
         pygame.time.delay(5)
 
 
+def win(score):
+    # Win text
+    font = pygame.font.SysFont('Monospace', 30)
+    win_text = font.render('YOU WIN!', True, WHITE)
+    win_text_rect = win_text.get_rect(center=(WIDTH / 2, HEIGHT / 2))
+    screen.blit(win_text, win_text_rect)
+
+    # Score text
+    score_text = font.render(f'Score: {score}', True, WHITE)
+    score_text_rect = score_text.get_rect(center=(WIDTH / 2, HEIGHT / 2 + 30))
+    screen.blit(score_text, score_text_rect)
+
+    pygame.display.update()
+
+    pygame.time.delay(3000)
+
+    fade_out()
+
+    pygame.display.update()
+
+
+def lose(score):
+    # Lose text
+    font = pygame.font.SysFont('Monospace', 30)
+    loss_text = font.render('YOU LOSE', True, WHITE)
+    loss_text_rect = loss_text.get_rect(center=(WIDTH / 2, HEIGHT / 2))
+    screen.blit(loss_text, loss_text_rect)
+
+    # Score text
+    score_text = font.render(f'Score: {score}', True, WHITE)
+    score_text_rect = score_text.get_rect(center=(WIDTH / 2, HEIGHT / 2 + 30))
+    screen.blit(score_text, score_text_rect)
+
+    pygame.display.update()
+
+    pygame.time.delay(3000)
+
+    fade_out()
+
+    pygame.display.update()
+
+
 # ---------- SCREEN VARIABLES ---------
 WIDTH = 500
 HEIGHT = 600
@@ -53,12 +96,12 @@ font = pygame.font.SysFont('Monospace', FONT_SIZE)
 
 # ---------- GAME STATE ---------------
 finished = False
-loading_screen = False
+loading_screen = True
 log_in = False
 profile_screen = False
 main_menu = False
 
-difficulty_selection = True
+difficulty_selection = False
 tutorial = False
 easy = False
 medium = False
@@ -109,7 +152,30 @@ description = ['This is your space ship,',
                'screen. If you run out of ',
                'lives, you lose!']
 
-# ---------- MAIN GAME LOOP------------
+# ---------- GAME VARIABLES -----------
+ship_x = WIDTH / 2 - 32
+ship_y = 500
+enemy_pos = []
+enemy_speed = []
+easy_speed = 2
+ship_laser_pos = []
+enemy_laser_pos = []
+easy_lives = 3
+easy_safe_health = 10000
+laser_off_screen = False
+easy_score = 0
+ship_laser_del = []
+enemy_ship_del = []
+enemy_laser_off_screen = []
+medium_speed = 3
+medium_score = 0
+medium_safe_health = 10000
+medium_lives = 2
+hard_score = 0
+hard_safe_health = 15000
+hard_lives = 1
+
+# ---------- MAIN GAME LOOP -----------
 while not finished:
 
     # EVENTS
@@ -167,6 +233,10 @@ while not finished:
                     fade_out()
                     tutorial = True
                     main_menu = False
+
+            elif easy is True or medium is True or hard is True:
+                if start is False:
+                    start = True
 
             elif profile_screen is True:
                 fade_out()
@@ -290,6 +360,16 @@ while not finished:
 
                         with open('usernames.json', 'w') as f:
                             json.dump(usernames, f, indent=4)
+
+            elif easy is True or medium is True or hard is True:
+                if start is False:
+                    start = True
+                else:
+                    if event.key == pygame.K_SPACE:
+                        if len(ship_laser_pos) != 0 and ship_laser_pos[-1][1] >= ship_y - 40:
+                            pass
+                        else:
+                            ship_laser_pos.append([ship_x + 27, ship_y])
 
             elif tutorial is True:
                 fade_out()
@@ -499,6 +579,8 @@ while not finished:
 
     # DIFFICULTY SELECTION
     elif difficulty_selection is True:
+        screen.fill(BACKGROUND_COLOUR)
+
         # Title
         font = pygame.font.SysFont('Monospace', 40)
         title_text = font.render('Select Difficulty', True, WHITE)
@@ -559,17 +641,525 @@ while not finished:
 
     # EASY MODE
     elif easy is True:
+
+        screen.fill(BACKGROUND_COLOUR)
+
         if start is False:
-            pass
+            # ---------- GAME VARIABLES -----------
+            ship_x = WIDTH / 2 - 32
+            ship_y = 500
+            enemy_pos = []
+            enemy_speed = []
+            easy_speed = 2
+            ship_laser_pos = []
+            enemy_laser_pos = []
+            easy_lives = 3
+            easy_safe_health = 5000
+            laser_off_screen = False
+            easy_score = 0
+            ship_laser_del = []
+            enemy_ship_del = []
+            enemy_laser_off_screen = []
+
+            # Next step instructions (fade in and out)
+            font = pygame.font.SysFont('Monospace', 20)
+            instructions_text = font.render('Press any key to continue.', True, WHITE)
+            instructions_text_rect = instructions_text.get_rect(center=(WIDTH / 2, HEIGHT / 2))
+            screen.blit(instructions_text, instructions_text_rect)
+
+            if alpha >= 255 or alpha <= 0:
+                change *= -1
+            alpha += change
+            fade.set_alpha(alpha)
+            screen.blit(fade, ((WIDTH - FADE_WIDTH) / 2, (HEIGHT - FADE_HEIGHT) / 2))
         else:
-            pass
+            # Ship movement
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+                if ship_x >= 0:
+                    ship_x -= 5
+            elif keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+                if ship_x <= WIDTH - 64:
+                    ship_x += 5
+
+            # Enemy spawns
+            num = random.randint(0, 50)
+            if num == 0:
+                enemy_pos.append([random.randint(0, WIDTH - 49), random.randint(120, 200)])
+                enemy_speed.append(easy_speed)
+
+            # Enemy movement
+            for i in range(len(enemy_pos)):
+                if enemy_pos[i][0] - easy_speed < 0 or enemy_pos[i][0] + 48 + easy_speed > WIDTH:
+                    enemy_speed[i] *= -1
+                enemy_pos[i][0] += enemy_speed[i]
+
+            # Ship lasers
+            ship_laser = pygame.image.load('laser.png')
+            for i in range(len(ship_laser_pos)):
+                if ship_laser_pos[i][1] <= -20:
+                    laser_off_screen = True
+                else:
+                    ship_laser_pos[i][1] -= 7
+                    screen.blit(ship_laser, (ship_laser_pos[i][0], ship_laser_pos[i][1]))
+
+                    # Collision with enemy
+                    for j in range(len(enemy_pos)):
+                        if enemy_pos[j][0] <= ship_laser_pos[i][0] <= enemy_pos[j][0] + 48:
+                            if enemy_pos[j][1] <= ship_laser_pos[i][1] <= enemy_pos[j][1] + 48:
+                                enemy_ship_del.append(j)
+                                ship_laser_del.append(i)
+                                easy_score += 100
+
+                    # Collision with safe
+                    if 218 <= ship_laser_pos[i][0] <= 282:
+                        if 10 <= ship_laser_pos[i][1] <= 74:
+                            easy_safe_health -= 100
+                            easy_score += 100
+                            ship_laser_del.append(i)
+
+                            # If safe is down to 0 health
+                            if easy_safe_health <= 0:
+                                win(easy_score)
+                                easy = False
+                                difficulty_selection = True
+                                start = False
+
+                                # Save score
+                                if usernames[username]["easy"] < easy_score:
+                                    usernames[username]["easy"] = easy_score
+
+                                    with open('usernames.json', 'w') as f:
+                                        json.dump(usernames, f)
+
+            if laser_off_screen is True:
+                ship_laser_pos.pop(0)
+                laser_off_screen = False
+            if len(enemy_ship_del) != 0:
+                for i in range(len(enemy_ship_del)):
+                    enemy_pos.pop(enemy_ship_del[i - i])
+                enemy_ship_del.clear()
+            if len(ship_laser_del) != 0:
+                for i in range(len(ship_laser_del)):
+                    ship_laser_pos.pop(ship_laser_del[i - i])
+                ship_laser_del.clear()
+
+            # Enemy lasers
+            for ship in enemy_pos:
+                num = random.randint(0, 100)
+                # Enemy shoots laser
+                if num == 0:
+                    enemy_laser_pos.append([ship[0], ship[1] + 40])
+
+            # Enemy lasers
+            enemy_laser = pygame.image.load('enemy laser.png')
+            for i in range(len(enemy_laser_pos)):
+                if enemy_laser_pos[i][1] > HEIGHT - 40:
+                    enemy_laser_off_screen.append(i)
+                else:
+                    enemy_laser_pos[i][1] += 7
+                    screen.blit(enemy_laser, (enemy_laser_pos[i][0], enemy_laser_pos[i][1]))
+
+                    # Collision with player
+                    if ship_x <= enemy_laser_pos[i][0] <= ship_x + 64:
+                        if ship_y <= enemy_laser_pos[i][1] <= ship_y + 64:
+                            easy_lives -= 1
+                            easy_score -= 100
+                            enemy_laser_off_screen.append(i)
+
+                            if easy_lives <= 0:
+                                lose(easy_score)
+                                easy = False
+                                difficulty_selection = True
+                                start = False
+
+                                # Save score
+                                if usernames[username]["easy"] < easy_score:
+                                    usernames[username]["easy"] = easy_score
+
+                                    with open('usernames.json', 'w') as f:
+                                        json.dump(usernames, f)
+
+            if len(enemy_laser_off_screen) != 0:
+                for i in range(len(enemy_laser_off_screen)):
+                    enemy_laser_pos.pop(enemy_laser_off_screen[i])
+                enemy_laser_off_screen.clear()
+
+        # Draw space ship icon
+        ship = pygame.image.load('ship.png')
+        ship = pygame.transform.rotate(ship, 180)
+        screen.blit(ship, (ship_x, ship_y))
+
+        # Draw enemies
+        for pos in enemy_pos:
+            enemy = pygame.image.load('enemy.png')
+            screen.blit(enemy, (pos[0], pos[1]))
+
+        # Draw safe
+        safe = pygame.image.load('safe.png')
+        screen.blit(safe, (WIDTH / 2 - 32, 10))
+
+        # Draw score
+        font = pygame.font.SysFont('Monospace', 20)
+        score_text = font.render(f'Score: {easy_score}', True, RED)
+        screen.blit(score_text, (10, 10))
+
+        # Draw safe health
+        health_text = font.render(f'Safe: {easy_safe_health}', True, RED)
+        screen.blit(health_text, (10, 40))
+
+        # Draw player health
+        player_text = font.render(f'Health: {easy_lives}', True, RED)
+        screen.blit(player_text, (10, 70))
+
+        pygame.display.update()
 
     # MEDIUM MODE
     elif medium is True:
-        pass
+        screen.fill(BACKGROUND_COLOUR)
+
+        if start is False:
+            # ---------- GAME VARIABLES -----------
+            ship_x = WIDTH / 2 - 32
+            ship_y = 500
+            enemy_pos = []
+            enemy_speed = []
+            medium_speed = 3
+            ship_laser_pos = []
+            enemy_laser_pos = []
+            medium_lives = 2
+            medium_safe_health = 10000
+            laser_off_screen = False
+            medium_score = 0
+            ship_laser_del = []
+            enemy_ship_del = []
+            enemy_laser_off_screen = []
+
+            # Next step instructions (fade in and out)
+            font = pygame.font.SysFont('Monospace', 20)
+            instructions_text = font.render('Press any key to continue.', True, WHITE)
+            instructions_text_rect = instructions_text.get_rect(center=(WIDTH / 2, HEIGHT / 2))
+            screen.blit(instructions_text, instructions_text_rect)
+
+            if alpha >= 255 or alpha <= 0:
+                change *= -1
+            alpha += change
+            fade.set_alpha(alpha)
+            screen.blit(fade, ((WIDTH - FADE_WIDTH) / 2, (HEIGHT - FADE_HEIGHT) / 2))
+        else:
+            # Ship movement
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+                if ship_x >= 0:
+                    ship_x -= 5
+            elif keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+                if ship_x <= WIDTH - 64:
+                    ship_x += 5
+
+            # Enemy spawns
+            num = random.randint(0, 40)
+            if num == 0:
+                enemy_pos.append([random.randint(0, WIDTH - 49), random.randint(120, 300)])
+                enemy_speed.append(medium_speed)
+
+            # Enemy movement
+            for i in range(len(enemy_pos)):
+                if enemy_pos[i][0] - medium_speed < 0 or enemy_pos[i][0] + 48 + medium_speed > WIDTH:
+                    enemy_speed[i] *= -1
+                enemy_pos[i][0] += enemy_speed[i]
+
+            # Ship lasers
+            ship_laser = pygame.image.load('laser.png')
+            for i in range(len(ship_laser_pos)):
+                if ship_laser_pos[i][1] <= -20:
+                    laser_off_screen = True
+                else:
+                    ship_laser_pos[i][1] -= 7
+                    screen.blit(ship_laser, (ship_laser_pos[i][0], ship_laser_pos[i][1]))
+
+                    # Collision with enemy
+                    for j in range(len(enemy_pos)):
+                        if enemy_pos[j][0] <= ship_laser_pos[i][0] <= enemy_pos[j][0] + 48:
+                            if enemy_pos[j][1] <= ship_laser_pos[i][1] <= enemy_pos[j][1] + 48:
+                                enemy_ship_del.append(j)
+                                ship_laser_del.append(i)
+                                medium_score += 100
+
+                    # Collision with safe
+                    if 218 <= ship_laser_pos[i][0] <= 282:
+                        if 10 <= ship_laser_pos[i][1] <= 74:
+                            medium_safe_health -= 100
+                            medium_score += 100
+                            ship_laser_del.append(i)
+
+                            # If safe is down to 0 health
+                            if medium_safe_health <= 0:
+                                win(medium_score)
+                                medium = False
+                                difficulty_selection = True
+                                start = False
+
+                                # Save score
+                                if usernames[username]["medium"] < medium_score:
+                                    usernames[username]["medium"] = medium_score
+
+                                    with open('usernames.json', 'w') as f:
+                                        json.dump(usernames, f)
+
+            if laser_off_screen is True:
+                ship_laser_pos.pop(0)
+                laser_off_screen = False
+            if len(enemy_ship_del) != 0:
+                for i in range(len(enemy_ship_del)):
+                    enemy_pos.pop(enemy_ship_del[i - i])
+                enemy_ship_del.clear()
+            if len(ship_laser_del) != 0:
+                for i in range(len(ship_laser_del)):
+                    ship_laser_pos.pop(ship_laser_del[i - i])
+                ship_laser_del.clear()
+
+            # Enemy lasers
+            for ship in enemy_pos:
+                num = random.randint(0, 50)
+                # Enemy shoots laser
+                if num == 0:
+                    enemy_laser_pos.append([ship[0], ship[1] + 40])
+
+            # Enemy lasers
+            enemy_laser = pygame.image.load('enemy laser.png')
+            for i in range(len(enemy_laser_pos)):
+                if enemy_laser_pos[i][1] > HEIGHT - 40:
+                    enemy_laser_off_screen.append(i)
+                else:
+                    enemy_laser_pos[i][1] += 7
+                    screen.blit(enemy_laser, (enemy_laser_pos[i][0], enemy_laser_pos[i][1]))
+
+                    # Collision with player
+                    if ship_x <= enemy_laser_pos[i][0] <= ship_x + 64:
+                        if ship_y <= enemy_laser_pos[i][1] <= ship_y + 64:
+                            medium_lives -= 1
+                            medium_score -= 100
+                            enemy_laser_off_screen.append(i)
+
+                            if medium_lives <= 0:
+                                lose(medium_score)
+                                medium = False
+                                difficulty_selection = True
+                                start = False
+
+                                # Save score
+                                if usernames[username]["medium"] < medium_score:
+                                    usernames[username]["medium"] = medium_score
+
+                                    with open('usernames.json', 'w') as f:
+                                        json.dump(usernames, f)
+
+            if len(enemy_laser_off_screen) != 0:
+                for i in range(len(enemy_laser_off_screen)):
+                    enemy_laser_pos.pop(enemy_laser_off_screen[i])
+                enemy_laser_off_screen.clear()
+
+        # Draw space ship icon
+        ship = pygame.image.load('ship.png')
+        ship = pygame.transform.rotate(ship, 180)
+        screen.blit(ship, (ship_x, ship_y))
+
+        # Draw enemies
+        for pos in enemy_pos:
+            enemy = pygame.image.load('enemy.png')
+            screen.blit(enemy, (pos[0], pos[1]))
+
+        # Draw safe
+        safe = pygame.image.load('safe.png')
+        screen.blit(safe, (WIDTH / 2 - 32, 10))
+
+        # Draw score
+        font = pygame.font.SysFont('Monospace', 20)
+        score_text = font.render(f'Score: {medium_score}', True, RED)
+        screen.blit(score_text, (10, 10))
+
+        # Draw safe health
+        health_text = font.render(f'Safe: {medium_safe_health}', True, RED)
+        screen.blit(health_text, (10, 40))
+
+        # Draw player health
+        player_text = font.render(f'Health: {medium_lives}', True, RED)
+        screen.blit(player_text, (10, 70))
+
+        pygame.display.update()
 
     # HARD MODE
     elif hard is True:
-        pass
+        screen.fill(BACKGROUND_COLOUR)
+
+        if start is False:
+            # ---------- GAME VARIABLES -----------
+            ship_x = WIDTH / 2 - 32
+            ship_y = 500
+            enemy_pos = []
+            enemy_speed = []
+            hard_speed = 4
+            ship_laser_pos = []
+            enemy_laser_pos = []
+            hard_lives = 1
+            hard_safe_health = 15000
+            laser_off_screen = False
+            hard_score = 0
+            ship_laser_del = []
+            enemy_ship_del = []
+            enemy_laser_off_screen = []
+
+            # Next step instructions (fade in and out)
+            font = pygame.font.SysFont('Monospace', 20)
+            instructions_text = font.render('Press any key to continue.', True, WHITE)
+            instructions_text_rect = instructions_text.get_rect(center=(WIDTH / 2, HEIGHT / 2))
+            screen.blit(instructions_text, instructions_text_rect)
+
+            if alpha >= 255 or alpha <= 0:
+                change *= -1
+            alpha += change
+            fade.set_alpha(alpha)
+            screen.blit(fade, ((WIDTH - FADE_WIDTH) / 2, (HEIGHT - FADE_HEIGHT) / 2))
+        else:
+            # Ship movement
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+                if ship_x >= 0:
+                    ship_x -= 5
+            elif keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+                if ship_x <= WIDTH - 64:
+                    ship_x += 5
+
+            # Enemy spawns
+            num = random.randint(0, 25)
+            if num == 0:
+                enemy_pos.append([random.randint(0, WIDTH - 49), random.randint(120, 300)])
+                enemy_speed.append(medium_speed)
+
+            # Enemy movement
+            for i in range(len(enemy_pos)):
+                if enemy_pos[i][0] - medium_speed < 0 or enemy_pos[i][0] + 48 + medium_speed > WIDTH:
+                    enemy_speed[i] *= -1
+                enemy_pos[i][0] += enemy_speed[i]
+
+            # Ship lasers
+            ship_laser = pygame.image.load('laser.png')
+            for i in range(len(ship_laser_pos)):
+                if ship_laser_pos[i][1] <= -20:
+                    laser_off_screen = True
+                else:
+                    ship_laser_pos[i][1] -= 7
+                    screen.blit(ship_laser, (ship_laser_pos[i][0], ship_laser_pos[i][1]))
+
+                    # Collision with enemy
+                    for j in range(len(enemy_pos)):
+                        if enemy_pos[j][0] <= ship_laser_pos[i][0] <= enemy_pos[j][0] + 48:
+                            if enemy_pos[j][1] <= ship_laser_pos[i][1] <= enemy_pos[j][1] + 48:
+                                enemy_ship_del.append(j)
+                                ship_laser_del.append(i)
+                                hard_score += 100
+
+                    # Collision with safe
+                    if 218 <= ship_laser_pos[i][0] <= 282:
+                        if 10 <= ship_laser_pos[i][1] <= 74:
+                            hard_safe_health -= 100
+                            hard_score += 100
+                            ship_laser_del.append(i)
+
+                            # If safe is down to 0 health
+                            if hard_safe_health <= 0:
+                                win(hard_score)
+                                hard = False
+                                difficulty_selection = True
+                                start = False
+
+                                # Save score
+                                if usernames[username]["hard"] < hard_score:
+                                    usernames[username]["hard"] = hard_score
+
+                                    with open('usernames.json', 'w') as f:
+                                        json.dump(usernames, f)
+
+            if laser_off_screen is True:
+                ship_laser_pos.pop(0)
+                laser_off_screen = False
+            if len(enemy_ship_del) != 0:
+                for i in range(len(enemy_ship_del)):
+                    enemy_pos.pop(enemy_ship_del[i - i])
+                enemy_ship_del.clear()
+            if len(ship_laser_del) != 0:
+                for i in range(len(ship_laser_del)):
+                    ship_laser_pos.pop(ship_laser_del[i - i])
+                ship_laser_del.clear()
+
+            # Enemy lasers
+            for ship in enemy_pos:
+                num = random.randint(0, 50)
+                # Enemy shoots laser
+                if num == 0:
+                    enemy_laser_pos.append([ship[0], ship[1] + 40])
+
+            # Enemy lasers
+            enemy_laser = pygame.image.load('enemy laser.png')
+            for i in range(len(enemy_laser_pos)):
+                if enemy_laser_pos[i][1] > HEIGHT - 40:
+                    enemy_laser_off_screen.append(i)
+                else:
+                    enemy_laser_pos[i][1] += 7
+                    screen.blit(enemy_laser, (enemy_laser_pos[i][0], enemy_laser_pos[i][1]))
+
+                    # Collision with player
+                    if ship_x <= enemy_laser_pos[i][0] <= ship_x + 64:
+                        if ship_y <= enemy_laser_pos[i][1] <= ship_y + 64:
+                            hard_lives -= 1
+                            hard_score -= 100
+                            enemy_laser_off_screen.append(i)
+
+                            if hard_lives <= 0:
+                                lose(hard_score)
+                                hard = False
+                                difficulty_selection = True
+                                start = False
+
+                                # Save score
+                                if usernames[username]["hard"] < hard_score:
+                                    usernames[username]["hard"] = hard_score
+
+                                    with open('usernames.json', 'w') as f:
+                                        json.dump(usernames, f)
+
+            if len(enemy_laser_off_screen) != 0:
+                for i in range(len(enemy_laser_off_screen)):
+                    enemy_laser_pos.pop(enemy_laser_off_screen[i])
+                enemy_laser_off_screen.clear()
+
+        # Draw space ship icon
+        ship = pygame.image.load('ship.png')
+        ship = pygame.transform.rotate(ship, 180)
+        screen.blit(ship, (ship_x, ship_y))
+
+        # Draw enemies
+        for pos in enemy_pos:
+            enemy = pygame.image.load('enemy.png')
+            screen.blit(enemy, (pos[0], pos[1]))
+
+        # Draw safe
+        safe = pygame.image.load('safe.png')
+        screen.blit(safe, (WIDTH / 2 - 32, 10))
+
+        # Draw score
+        font = pygame.font.SysFont('Monospace', 20)
+        score_text = font.render(f'Score: {hard_score}', True, RED)
+        screen.blit(score_text, (10, 10))
+
+        # Draw safe health
+        health_text = font.render(f'Safe: {hard_safe_health}', True, RED)
+        screen.blit(health_text, (10, 40))
+
+        # Draw player health
+        player_text = font.render(f'Health: {hard_lives}', True, RED)
+        screen.blit(player_text, (10, 70))
+
+        pygame.display.update()
 
     clock.tick(30)
